@@ -1,6 +1,6 @@
 ﻿# P4 SDR: RTL-SDR receiver, ADS-B and Wi-Fi/BLE scanner on the ESP32-P4
 
-**An RTL-SDR Blog V4 dongle on a Waveshare ESP32-P4-WIFI6-Touch-LCD-4B (ESP32-P4 + ESP32-C6, 720x720 MIPI DSI, GT911 capacitive touch) makes a handheld spectrum and waterfall receiver. It has no Linux or PC behind it: native ESP-IDF firmware drives the dongle over USB.**
+**An RTL-SDR Blog V3/V4 dongle on a Waveshare ESP32-P4-WIFI6-Touch-LCD-4B (ESP32-P4 + ESP32-C6, 720x720 MIPI DSI, GT911 capacitive touch) makes a handheld spectrum and waterfall receiver. It has no Linux or PC behind it: native ESP-IDF firmware drives the dongle over USB.**
 
 Thank you to **John-ODell** for the original [esp32-p4-rtl-sdr](https://github.com/John-ODell/esp32-p4-rtl-sdr),
 from which this fork was created with hardware modifications for the Waveshare ESP32-P4-WIFI6-Touch-LCD-4B.
@@ -69,7 +69,7 @@ The screenshots come from `tools/preview` with made-up aircraft and neighbours.
 | Part | Notes |
 |---|---|
 | **Waveshare ESP32-P4-WIFI6-Touch-LCD-4B** | ESP32-P4 + ESP32-C6-MINI-1U (hosted over SDIO) for Wi-Fi/BLE. 720x720 ST7703 MIPI DSI, GT911 capacitive touch (I2C 0x5D), ES8311 codec + NS4150B amp, 32 MB flash/PSRAM. |
-| **RTL-SDR Blog V4** (or V3) dongle and an antenna | Plugs into a native USB-A port. |
+| **RTL-SDR Blog V3/V4** (or V3) dongle and an antenna | Plugs into a native USB-A port. |
 | A small speaker (optional) | Plugs into the kit's speaker connector (MX1.25), driven by ES8311/NS4150B. |
 | micro-SD card, FAT32 (optional) | Holds `MAP.BIN` for the ADS-B map, and the CSV logs. |
 
@@ -259,7 +259,7 @@ leaves the board running and reattaches if the USB serial port drops out, which 
 
 Core 0 runs the USB host, the IQ stream and the audio demodulator. Core 1 runs the FFT, drawing and touch.
 
-## Measured (chip v1.0, RTL-SDR Blog V4)
+## Measured (chip v1.0, RTL-SDR Blog V3/V4)
 
 - The dongle enumerates at USB high speed through the kit's CH334F hub.
 - Counter test, 20 s at 2.4 MS/s: 4.80 MB/s, **0 bytes lost**, 0 USB errors.
@@ -301,7 +301,7 @@ Core 0 runs the USB host, the IQ stream and the audio demodulator. Core 1 runs t
   FM is mono, because the kit has one speaker output.
 - AGC sets the gain from the loudest signal in the whole span, so a strong station nearby can hold
   it down while you listen to a weak one. Zoom doesn't change this; a fixed gain does.
-- Tested only with the RTL-SDR Blog V4 and on chip revision v1.0. The rev3 image is built but has
+- Tested only with the RTL-SDR Blog V3/V4 and on chip revision v1.0. The rev3 image is built but has
   not been run on hardware.
 - Wi-Fi scanning covers 2.4 GHz only, because the C6 has no 5 GHz radio.
 - The kit's USB-A power is always on, so software cannot power-cycle a hung dongle. Unplug it and

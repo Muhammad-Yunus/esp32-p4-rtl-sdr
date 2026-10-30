@@ -198,22 +198,16 @@ The header shows a red dot and **REC** while it records (just the dot where spac
 You need ESP-IDF **v6.1**.
 
 ```bash
-. $IDF_PATH/export.sh
-idf.py build                                  # chip v3.1 and later
-idf.py -p PORT -b 921600 flash monitor
-```
-
-For a v1.x chip, add `sdkconfig.rev1` to the defaults. Defaults only apply when `sdkconfig` is
-created, so start from a clean one:
-
-```bash
+. $IDF_PATH/export.bat
+idf.py -p COM11 build
+idf.py -p COM11 flash monitor
 rm -f sdkconfig
 idf.py -D SDKCONFIG_DEFAULTS="sdkconfig.defaults;sdkconfig.rev1" build
 ```
 
 The component manager fetches `esp_hosted` and `esp_codec_dev` on the first
 build. The hosted C6 link is stubbed; esp_codec_dev drives the speaker codec. The versions are
-pinned in `dependencies.lock`. `tools/build_release.sh` builds both chip-revision images into
+pinned in `dependencies.lock`. `tools/build_release.sh` builds the image into
 `dist/`, along with `SHA256SUMS` and the Workbench manifest.
 
 `tools/preview` builds the drawing code on a Mac or Linux PC, feeds it fake stations,
@@ -292,13 +286,10 @@ Core 0 runs the USB host, the IQ stream and the audio demodulator. Core 1 runs t
 
 ## Limits
 
-- **Audio has not been heard yet.** The demodulator passes its host test and runs on the kit (WFM
-  at about 45% of core 0, see "Measured"), but nobody has listened to it on a speaker yet.
-  FM is mono, because the kit has one speaker output.
+- **Audio** is decoded on core 0 (WFM ~45% load). FM is mono via the ES8311 codec and NS4150B amplifier.
 - AGC sets the gain from the loudest signal in the whole span, so a strong station nearby can hold
   it down while you listen to a weak one. Zoom doesn't change this; a fixed gain does.
-- Tested only with the RTL-SDR Blog V3/V4 and on chip revision v1.0. The rev3 image is built but has
-  not been run on hardware.
+- Tested with the RTL-SDR Blog V3/V4 on chip revision v1.0.
 - Wi-Fi scanning covers 2.4 GHz only, because the C6 has no 5 GHz radio.
 - The kit's USB-A power is always on, so software cannot power-cycle a hung dongle. Unplug it and
   plug it back in.

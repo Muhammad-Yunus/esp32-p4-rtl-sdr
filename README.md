@@ -84,7 +84,6 @@ The screenshots come from `tools/preview` with made-up aircraft and neighbours.
    | Image | Boots on | Status |
    |---|---|---|
    | smart-86-box-esp32p4-sdr-1.0.0.bin | ESP32-P4-WIFI6-Touch-LCD-4B | tested |
-   | `p4-sdr-1.2.0-rev3.bin` | v3.1 and later | built, not tested on hardware |
 
 4. Flash it:
    ```bash

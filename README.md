@@ -70,8 +70,6 @@ The screenshots come from `tools/preview` with made-up aircraft and neighbours.
 |---|---|
 | **Waveshare ESP32-P4-WIFI6-Touch-LCD-4B** | ESP32-P4 + ESP32-C6-MINI-1U (hosted over SDIO) for Wi-Fi/BLE. 720x720 ST7703 MIPI DSI, GT911 capacitive touch (I2C 0x5D), ES8311 codec + NS4150B amp, 32 MB flash/PSRAM. |
 | **RTL-SDR Blog V3/V4** dongle and an antenna | Plugs into a native USB-A port. |
-| A small speaker (optional) | Plugs into the kit's speaker connector (MX1.25), driven by ES8311/NS4150B. |
-| micro-SD card, FAT32 (optional) | Holds `MAP.BIN` for the ADS-B map, and the CSV logs. |
 
 ## Flash the prebuilt firmware
 

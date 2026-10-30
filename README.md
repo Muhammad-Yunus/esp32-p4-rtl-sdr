@@ -202,6 +202,7 @@ You need ESP-IDF **v6.1**.
 idf.py -p COM11 build
 idf.py -p COM11 flash monitor
 
+`
 The component manager fetches `esp_hosted` and `esp_codec_dev` on the first
 build. The hosted C6 link is stubbed; esp_codec_dev drives the speaker codec. The versions are
 pinned in `dependencies.lock`. `tools/build_release.sh` builds the image into

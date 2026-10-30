@@ -1,4 +1,4 @@
-# Architecture — ESP32-P4 RTL-SDR Migration to ESP32-P4-WIFI6-Touch-LCD-4B
+# Architecture ï¿½ ESP32-P4 RTL-SDR Migration to ESP32-P4-WIFI6-Touch-LCD-4B
 
 ## 1. System Overview
 
@@ -56,25 +56,21 @@ the changes required for migration to the Waveshare ESP32-P4-WIFI6-Touch-LCD-4B.
 
 ## 2. Module Decomposition
 
-### 2.1 Display Abstraction (rpi_display/)
-The display module provides a hardware-agnostic interface used by the UI layer.
+### 2.1 Display and Touch Components (components/)
+The UI links against a hardware-agnostic API plus a small legacy shim.
 
-**Current implementation (ILI9486 / 16-bit SPI):**
-    rpi_lcd.c        -- SPI bus init, ILI9486 init sequence, blit/fill operations
-    rpi_canvas.c     -- Software drawing primitives (fill rect, rounded rect, text)
+**Legacy compatibility component (components/rpi_display/):**
+    rpi_lcd.c        -- Thin wrapper forwarding rpi_lcd_* calls to ws_lcd_*
+
+**Waveshare component (components/waveshare_p4_lcd/):**
+    ws_lcd_dsi.c     -- ST7703 MIPI DSI init, blit/fill, backlight
+    ws_i2c.c         -- Single shared i2c_master bus for GT911 + ES8311
+    gt911_touch.c    -- esp_lcd_touch_gt911 wrapper, pixel coordinates
+    xpt2046.c        -- Compatibility shim mapping old API to ws_touch_read()
+    touch_cal.c      -- Optional 5-point affine calibration (identity default)
+    rpi_canvas.c     -- Software drawing primitives (resolution-agnostic)
     rpi_text.c       -- Text rendering using font8x16.h bitmap font
-    xpt2046.c        -- SPI touch controller driver (raw ADC values)
-    touch_cal.c      -- 5-point affine calibration: raw-to-screen coordinates
-    pins.h           -- Board-specific pin definitions
-
-**Target implementation (ST7703 / MIPI DSI 2-lane):**
-    rpi_lcd.c        -- Rewrite: esp_lcd + MIPI DSI init, blit via DMA
-    rpi_canvas.c     -- No change needed (resolution-agnostic)
-    rpi_text.c       -- No change needed
-    gt911_touch.c    -- New: I2C GT911 driver (replaces xpt2046.c)
-                       (no calibration needed -- capacitive touch is pixel-accurate)
-    gt911.h          -- New: touch event types (TAP, HOLD, SWIPE)
-    pins.h           -- Update: new pin definitions
+    ws_panel_config.h-- Pin map, I2C port/address, panel dimensions
 
 ### 2.2 UI Layer (main/ui.c, main/view.c, main/panel.c)
 - ui.c -- Main event loop: IQ processing -> spectrum -> view -> touch handling
@@ -97,7 +93,8 @@ The display module provides a hardware-agnostic interface used by the UI layer.
 - AM/FM/WFM demodulation
 - RDS decoding
 - **Pin mapping unchanged**: GPIO7/8 (I2C), GPIO9-13 (I2S), GPIO53 (amp)
-- **Note**: I2C bus shared with GT911 touch (different addresses, no conflict)
+- **Note**: audio and GT911 share the i2c_master bus owned by ws_i2c.c
+  (ES8311 0x18, GT911 0x5D; different addresses, one bus handle)
 
 ### 2.5 Wi-Fi/BLE Scanner (main/amap.c)
 - Uses esp_hosted (ESP32-C6 co-processor over SDIO)
@@ -125,7 +122,8 @@ The display module provides a hardware-agnostic interface used by the UI layer.
                                   ST7703 / MIPI DSI --> Display
 
     Touch:
-    GT911 (I2C) --> x,y coordinates --> ui.c event handler --> action
+    GT911 (I2C) --> esp_lcd_touch_gt911 --> pixel x,y --> xpt2046 shim
+                --> optional touch_cal_map() --> ui.c event handler --> action
 
     Audio:
     I2S In --> demod.c --> I2S Out --> ES8311 --> Speaker
@@ -136,7 +134,7 @@ The display module provides a hardware-agnostic interface used by the UI layer.
     |--------------------|------------------------|---------------------------|--------------|
     | Display driver     | ILI9486, 16-bit SPI    | ST7703, MIPI DSI 2-lane   | MAJOR        |
     | Touch driver       | XPT2046, SPI (raw ADC) | GT911, I2C (pixel coords) | MAJOR        |
-    | Touch cal          | 5-point affine         | Not needed (capacitive)   | REMOVE       |
+    | Touch cal          | 5-point affine         | Identity default, optional| KEEP (opt)   |
     | Canvas/drawing     | 480x320                | 720x720                   | ADAPT        |
     | UI layout          | Portrait 480x320       | Square 720x720            | REDESIGN     |
     | Audio (I2S/I2C)    | GPIO7/8/9-13/53        | GPIO7/8/9-13/53           | None         |
@@ -161,15 +159,17 @@ The display module provides a hardware-agnostic interface used by the UI layer.
     1. MIPI DSI initialization: ST7703 requires precise reset sequence and
        DSI PHY configuration (LDO channel 3, 2.5V). Must follow Waveshare BSP.
 
-    2. I2C bus contention: GT911 (0x5D) and ES8311 (0x18) share I2C.
-       Addresses don't conflict, but timing must be verified.
+    2. I2C bus ownership: GT911 (0x5D) and ES8311 (0x18) share one
+       i2c_master bus on port 0 (GPIO7/8). Addresses don't conflict.
+       Never create a legacy driver/i2c.h bus on the same port.
 
     3. Layout redesign: 720x720 square vs 480x320 portrait requires
        recalculating all coordinate math in view.c and panel.c.
 
     4. Touch behavior change: Capacitive (GT911) vs resistive (XPT2046):
-       - No press-and-hold-to-repeat -- need gesture-based alternative
-       - Tap detection is different (interrupt-driven vs polling)
+       - GT911 INT is not wired (GPIO_NC); ui.c polls at its normal rate
+       - ui.c already implements press/hold/release, so hold-to-repeat is kept
+       - Optional calibration runs only if the screen is held during splash
 
     5. USB OTG without hub: RTL-SDR connects directly to P4 USB.
        Should work, but physical connector may differ (USB-C vs micro-USB).

@@ -22,24 +22,32 @@
 
 ---
 
-## ADR-002: Use GT911 I2C Touch Driver
+## ADR-002: Use Official GT911 Component on a Shared I2C Bus
 
-    Status: Accepted
-    Date: 2026-01-01
+    Status: Accepted (supersedes the custom-driver decision)
+    Date: 2026-10-30
 
     Context:
       The current touch controller is XPT2046 (resistive, SPI, raw ADC values).
       The target board uses GT911 (capacitive, I2C, pixel coordinates).
+      The ES8311 audio codec is on the same physical I2C bus (GPIO7/8).
+      A custom GT911 driver using the legacy driver/i2c.h API could not coexist
+      with the i2c_master bus created by the audio codec on the same port.
 
     Decision:
-      Implement a custom GT911 driver using ESP-IDF I2C master API.
-      No calibration needed -- GT911 returns pixel coordinates directly.
+      Use espressif/esp_lcd_touch_gt911 (v1.2.1) with esp_lcd_panel_io_i2c.
+      Create one shared i2c_master bus in ws_i2c.c and let both GT911 and
+      ES8311 acquire devices from it. Return GT911 pixel coordinates directly;
+      keep the 5-point affine calibration as an optional correction path with
+      a 1:1 identity default.
 
     Consequences:
-      + No calibration overhead
-      + Faster touch response (interrupt-driven)
-      - Different API from xpt2046.c -- UI layer needs update
-      - Capacitive touch doesn't support press-and-hold the same way
+      + Maintained upstream driver; no custom register handling
+      + Single I2C bus owner avoids legacy/new driver conflicts
+      + Touch works out of the box without calibration
+      - Adds esp_lcd_touch + esp_lcd_touch_gt911 component dependencies
+      - xpt2046.c remains only as a thin compatibility shim for ui.c
+      - Optional calibration still needs a hold-at-boot gesture
 
 ---
 

@@ -19,6 +19,30 @@ dependencies:
       registry_url: https://components.espressif.com/
       type: service
     version: 1.6.2
+  espressif/esp_lcd_touch:
+    component_hash: 3f85a7d95af876f1a6ecca8eb90a81614890d0f03a038390804e5a77e2caf862
+    dependencies:
+    - name: idf
+      require: private
+      version: '>=4.4.2'
+    source:
+      registry_url: https://components.espressif.com
+      type: service
+    version: 1.2.1
+  espressif/esp_lcd_touch_gt911:
+    component_hash: 737bdf29e0823eacf041381e81db2aaf5d378f3b5417df7f415f83319e3e790b
+    dependencies:
+    - name: espressif/esp_lcd_touch
+      registry_url: https://components.espressif.com
+      require: public
+      version: ^1.2.0
+    - name: idf
+      require: private
+      version: '>=5.2'
+    source:
+      registry_url: https://components.espressif.com/
+      type: service
+    version: 1.2.1
   espressif/usb:
     component_hash: 99eee72ea224d9117d4c342442717a1f20bf8112e2ab5d7d7038b827874f4c92
     dependencies:
@@ -58,8 +82,9 @@ dependencies:
     version: 2.0.0
 direct_dependencies:
 - espressif/esp_codec_dev
+- espressif/esp_lcd_touch_gt911
 - espressif/usb
 - waveshare/esp_lcd_st7703
-manifest_hash: 266692a6bb18304821535a5faa9f5448dd599f172867aa7a41285969c72dc764
+manifest_hash: 5c3acbe2f2c992a76d584deaa369c501dca260e8928eed5eacf0a1bf3262a69b
 target: esp32p4
 version: 3.0.0

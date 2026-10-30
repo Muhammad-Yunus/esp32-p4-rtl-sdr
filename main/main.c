@@ -95,11 +95,15 @@ static void splash_and_touch(void)
         }
     }
     float err = 0;
-    if (touch_cal_load(&s_cal, &err) == ESP_OK && !held) {
+    esp_err_t cal = touch_cal_load(&s_cal, &err);
+    if (cal == ESP_OK && !held) {
         ESP_LOGI(TAG, "touch calibration loaded (worst %.1f px)", err);
-    } else {
-        ESP_LOGI(TAG, "%s: running touch calibration", held ? "screen held" : "no calibration saved");
+    } else if (held) {
+        ESP_LOGI(TAG, "screen held: running touch calibration");
         ESP_ERROR_CHECK(touch_cal_run(&s_cal, &err));
+    } else {
+        touch_cal_default(&s_cal);
+        ESP_LOGI(TAG, "no touch calibration saved: using 1:1 mapping");
     }
     if (s_bmp) view_splash_image(s_bmp, s_bmp_len);   /* again: calibration drew over it */
     else view_splash(0, 1, SUB);             /* the whole screen, tuned in, no footer */

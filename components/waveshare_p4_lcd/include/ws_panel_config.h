@@ -14,7 +14,7 @@
  *     SDA       GPIO7
  *     SCL       GPIO8
  *     RST       GPIO23
- *     TP_INT    TP2 (test point, not GPIO)
+ *     TP_INT    not connected (use -1)
  *
  * This header is included by ws_lcd.h which provides the panel dimension macros.
  * The Kconfig-driven CONFIG_ values used here require sdkconfig.h to be pre-included.
@@ -35,14 +35,10 @@
 #define WS_LCD_BL_ON_LEVEL   1
 #define WS_LCD_BL_OFF_LEVEL  0
 
-/* I2C bus ID for GT911 */
+/* Shared I2C bus (GT911 touch + ES8311 audio codec) */
 #define WS_TP_I2C_PORT       0
 #define WS_TOUCH_I2C_FREQ    400000
 #define GT911_I2C_ADDR       0x5D
-
-#ifndef WS_TOUCH_I2C_FREQ
-#define WS_TOUCH_I2C_FREQ    400000
-#endif
 
 /* Touch INT pin — not wired on P4 4B; define as -1 for legacy pins.h compat */
 #ifndef WS_PIN_TP_INT

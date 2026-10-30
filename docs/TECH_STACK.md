@@ -27,29 +27,28 @@
     | Backlight EN  | GPIO33                                               |
     | LCD Reset     | GPIO27                                               |
     | Touch Reset   | GPIO23                                               |
+    | Touch INT     | Not connected (GPIO_NC)                              |
 
 ## Pin Mapping (Target Board)
 
     Display (MIPI DSI):
-      DSI_DATA lanes:  GPIO0..GPIO7 (2-lane x 8 bits = 16-bit RGB565)
-      DSI_CLK:         GPIO8
+      DSI lanes:       dedicated MIPI DSI pins (no GPIO configuration)
       LCD_RST:         GPIO27
       BL_EN:           GPIO33 (active HIGH)
       BL_PWM:          GPIO26
 
-    Touch (I2C):
-      I2C1_SDA:        GPIO7
-      I2C1_SCL:        GPIO8
+    Shared I2C bus (board net labeled I2C1, firmware I2C port 0):
+      SDA:             GPIO7  <-- GT911 touch + ES8311 codec
+      SCL:             GPIO8  <-- GT911 touch + ES8311 codec
       TOUCH_RST:       GPIO23
+      TOUCH_INT:       not connected
 
-    Audio (I2S + I2C):
+    Audio (I2S + shared I2C):
       I2S_DATA:        GPIO9
       I2S_BCLK:        GPIO10
       I2S_LRC:         GPIO11
       I2S_MCLK:        GPIO12
       I2S_SDIN:        GPIO13
-      I2C0_SDA:        GPIO7  <-- SHARED with GT911
-      I2C0_SCL:        GPIO8  <-- SHARED with GT911
       AMP_ENABLE:      GPIO53
 
     SD Card (SDIO):
@@ -70,14 +69,15 @@
 
 ## External Dependencies
 
-    | Library             | Purpose                                         |
-    |---------------------|--------------------------------------------------|
-    | librtlsdr           | RTL-SDR USB dongle driver (FT231XS for V3)      |
-    | esp_lcd             | MIPI DSI and ST7703 panel drivers               |
-    | esp_lcd_mipi_dsi    | MIPI DSI bus abstraction                          |
-    | esp_lcd_st7703      | ST7703 panel controller                           |
-    | esp_hosted          | ESP32-C6 co-processor for Wi-Fi/BLE             |
-    | esp_codec_dev       | Audio codec device abstraction (ES8311)         |
+    | Library                       | Version | Purpose                              |
+    |-------------------------------|---------|--------------------------------------|
+    | librtlsdr                     | in-tree | RTL-SDR USB driver (FT231XS for V3)  |
+    | waveshare/esp_lcd_st7703      | ^2.0.0  | ST7703 MIPI DSI panel controller     |
+    | espressif/esp_lcd_touch_gt911 | ^1.2.1  | GT911 capacitive touch driver        |
+    | espressif/esp_lcd_touch       | 1.2.1   | Touch abstraction (transitive)       |
+    | espressif/esp_codec_dev       | 1.6.*   | Audio codec abstraction (ES8311)     |
+    | espressif/usb                 | *       | USB host stack for RTL-SDR           |
+    | esp_hosted                    | TBD     | ESP32-C6 co-processor (not wired yet)|
 
 ## Build Commands
 
@@ -103,7 +103,8 @@
     |   +-- dsi/          # esp_lcd_mipi_dsi.h
     |   +-- spi/          # esp_lcd_spi_panel.h
     |   +-- include/      # esp_lcd_panel_ops.h, esp_lcd_panel_io.h
-    +-- driver/           # gpio, i2c, i2s, spi, ledc
+    +-- driver/           # gpio, i2s, spi, ledc
+    +-- esp_driver_i2c/   # i2c_master API (shared GT911 + ES8311 bus)
     +-- esp_hid/          # BLE HID (if used)
     +-- esp_wifi/         # Wi-Fi scanner
     +-- bt/               # BLE scanner

@@ -38,11 +38,12 @@
       [ ] FR-DISPLAY-06: Display reset via GPIO27
       [ ] FR-DISPLAY-07: Handle screen rotation (portrait/landscape modes)
 
-    ### 3.2 Touch (NEW -- replaces xpt2046.c + touch_cal.c)
-      [ ] FR-TOUCH-01: Initialize GT911 via I2C (address 0x5D, GPIO7/8)
-      [ ] FR-TOUCH-02: Read touch coordinates (x, y, touch count)
+    ### 3.2 Touch (GT911 via official esp_lcd_touch component)
+      [ ] FR-TOUCH-01: Initialize GT911 at 0x5D on the shared I2C bus (GPIO7/8)
+      [ ] FR-TOUCH-02: Read touch coordinates (x, y, touch count) in pixels
       [ ] FR-TOUCH-03: Provide tap, hold, and swipe gesture detection
-      [ ] FR-TOUCH-04: No calibration required (capacitive = pixel-accurate)
+      [ ] FR-TOUCH-04: Work without calibration; optional 5-point correction
+                      when the screen is held during boot
       [ ] FR-TOUCH-05: Report touch events at >=30 Hz polling rate
 
     ### 3.3 UI Layout (ADAPT -- view.c, panel.c)
@@ -101,9 +102,9 @@
 
     ### Phase 2: Touch Driver
       Goal: Read touch coordinates from GT911.
-      1. Create gt911_touch.c using I2C driver
-      2. Implement coordinate reading and event detection
-      3. Replace xpt2046.c + touch_cal.c with GT911 driver
+      1. Create shared i2c_master bus in ws_i2c.c (GT911 + ES8311)
+      2. Wrap espressif/esp_lcd_touch_gt911 in gt911_touch.c
+      3. Keep xpt2046.c as a shim; identity calibration by default
       4. Test: tap on screen reports correct coordinates
 
     ### Phase 3: Canvas and Drawing
@@ -131,34 +132,39 @@
 ## 6. File Changes Summary
 
     ### New Files
-      components/rpi_display/
-        gt911_touch.c       # GT911 I2C touch driver
-        gt911_touch.h       # GT911 driver header
+      components/waveshare_p4_lcd/
+        ws_lcd_dsi.c        # ST7703 MIPI DSI display/backlight driver
+        ws_i2c.c/.h         # Shared i2c_master bus (GT911 + ES8311)
+        gt911_touch.c/.h    # esp_lcd_touch_gt911 wrapper
+        xpt2046.c/.h        # Compatibility shim for legacy UI calls
+        touch_cal.c/.h      # Optional affine calibration, identity default
+        rpi_canvas.c/.h     # Drawing primitives (moved from rpi_display)
+        rpi_text.c/.h       # Text rendering (moved from rpi_display)
+        ws_panel_config.h   # Pin map and panel/I2C constants
       docs/
-        ARCHITECTURE.md     # This migration architecture document
+        ADR.md              # Architecture decision records
+        ARCHITECTURE.md     # Migration architecture document
         TECH_STACK.md       # Hardware and software stack reference
         PRD.md              # This requirements document
         CONVENTIONS.md      # Code and project conventions
 
     ### Modified Files
       components/rpi_display/
-        rpi_lcd.c           # Complete rewrite: MIPI DSI instead of SPI
-        rpi_lcd.h           # Update function signatures if needed
-        include/pins.h      # Update pin definitions for target board
+        rpi_lcd.c           # Thin compatibility wrapper over ws_lcd_*
       main/
-        main.c              # Update display init sequence
-        ui.c                # Update touch handling (remove calibration)
-        view.c              # Redesign layout for 720x720
-        panel.c             # Redesign layout for 720x720
-        Kconfig             # Update display config options
-      sdkconfig.defaults    # Update for new board (flash, PSRAM, MIPI DSI)
+        main.c              # Display/touch init, splash + optional calibration
+        audio.c             # Uses ws_i2c_bus() instead of owning I2C
+        ui.c                # Touch reads mapped through touch_cal_map()
+        view.c              # Layout for 720x720
+        panel.c             # Layout for 720x720
+        idf_component.yml   # Add esp_lcd_touch_gt911 + st7703 deps
+      components/waveshare_p4_lcd/
+        CMakeLists.txt      # Add ws_i2c.c and touch sources
+      sdkconfig.defaults    # Board config (flash, PSRAM, MIPI DSI)
 
-    ### Deleted Files
-      components/rpi_display/
-        xpt2046.c           # Resistive touch driver -- no longer needed
-        xpt2046.h
-        touch_cal.c         # 5-point calibration -- not needed for capacitive
-        touch_cal.h
+    ### Removed / Retained Shims
+      components/rpi_display/include/gt911_touch.h  # Removed duplicate
+      components/rpi_display/rpi_lcd.c              # Retained as wrapper
 
 ## 7. Success Criteria
 

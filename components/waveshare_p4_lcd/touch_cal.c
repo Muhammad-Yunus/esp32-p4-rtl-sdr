@@ -1,14 +1,14 @@
 /*
- * Touch calibration helper for GT911 capacitive touch
- * Saves/restores an affine transform mapping XPT2046 raw coords (0..4095)
- * to panel pixel coordinates. The original XPT2046 driver produced 12-bit
- * values; the GT911 is scaled to the same range for compatibility.
+ * Touch calibration helper for GT911 capacitive touch.
+ * Saves/restores an affine transform mapping the touch controller's
+ * reported coordinates to panel pixel coordinates.
  */
 
 #include "touch_cal.h"
 #include "gt911_touch.h"
 #include "ws_lcd.h"
 #include "esp_log.h"
+#include "esp_timer.h"
 #include "nvs_flash.h"
 #include "nvs.h"
 #include <string.h>
@@ -19,7 +19,17 @@
 static const char *TAG = "touch_cal";
 #define CAL_NVS_NAMESPACE  "touch"
 #define CAL_NVS_KEY        "cal"
-#define CAL_NVS_VERSION    1
+#define CAL_NVS_VERSION    2
+
+void touch_cal_default(touch_cal_t *cal)
+{
+    cal->a = 1;
+    cal->b = 0;
+    cal->c = 0;
+    cal->d = 0;
+    cal->e = 1;
+    cal->f = 0;
+}
 
 /* Solve 2x3 affine system from N calibration pairs.
  *   px = a*rx + b*ry + c
@@ -29,36 +39,35 @@ static void solve_affine(const uint16_t rx[], const uint16_t ry[],
                          const int px[], const int py[], int N,
                          touch_cal_t *cal)
 {
-    float Srx = 0, Sry = 0, Srx2 = 0, Sry2 = 0, Srxry = 0;
-    float Spx = 0, Spy = 0, Srxp = 0, Sryp = 0, Srxpy = 0, Srypy = 0;
+    float mx = 0, my = 0, mp = 0, mq = 0;
     for (int i = 0; i < N; i++) {
-        float rxf = rx[i], ryf = ry[i];
-        Srx  += rxf;  Sry  += ryf;
-        Srx2 += rxf * rxf;  Sry2 += ryf * ryf;  Srxry += rxf * ryf;
-        Spx  += px[i];  Spy  += py[i];
-        Srxp += rxf * px[i];  Sryp += ryf * px[i];
-        Srxpy += rxf * py[i];  Srypy += ryf * py[i];
+        mx += rx[i];
+        my += ry[i];
+        mp += px[i];
+        mq += py[i];
     }
-    float det = Srx2 * Sry2 - Srxry * Srxry;
-    if (det == 0) { cal->a = 1; cal->b = 0; cal->c = 0; cal->d = 0; cal->e = 1; cal->f = 0; return; }
-    cal->a = (Spx * Sry2 - Spy * Srxry) / (N * det) * N;  /* simplify: remove N from denom */
-    cal->b = (Spy * Srx2 - Spx * Srxry) / det;
-    cal->c = (Spx + cal->a * Srx + cal->b * Sry) / N;
-    cal->d = (Spy * Srx2 - Srxp * Srxry) / det;
-    cal->e = (Spx * Sry2 - Srxp * Srxry) / det;
-    cal->f = (Spy + cal->d * Srx + cal->e * Sry) / N;
-}
+    mx /= N; my /= N; mp /= N; mq /= N;
 
-static void invert_affine(const touch_cal_t *c, float *a_out, float *b_out, float *c_out,
-                           float *d_out, float *e_out, float *f_out)
-{
-    float det = c->a * c->e - c->b * c->d;
-    *a_out = c->e / det;
-    *b_out = -c->b / det;
-    *c_out = (c->b * c->f - c->c * c->e) / det;
-    *d_out = -c->d / det;
-    *e_out = c->a / det;
-    *f_out = (c->c * c->d - c->a * c->f) / det;
+    float Sxx = 0, Sxy = 0, Syy = 0, Sxp = 0, Syp = 0, Sxq = 0, Syq = 0;
+    for (int i = 0; i < N; i++) {
+        float dx = rx[i] - mx, dy = ry[i] - my;
+        float dp = px[i] - mp, dq = py[i] - mq;
+        Sxx += dx * dx;  Sxy += dx * dy;  Syy += dy * dy;
+        Sxp += dx * dp;  Syp += dy * dp;
+        Sxq += dx * dq;  Syq += dy * dq;
+    }
+
+    float det = Sxx * Syy - Sxy * Sxy;
+    if (fabsf(det) < 1e-6f) {
+        touch_cal_default(cal);
+        return;
+    }
+    cal->a = (Sxp * Syy - Syp * Sxy) / det;
+    cal->b = (Syp * Sxx - Sxp * Sxy) / det;
+    cal->c = mp - cal->a * mx - cal->b * my;
+    cal->d = (Sxq * Syy - Syq * Sxy) / det;
+    cal->e = (Syq * Sxx - Sxq * Sxy) / det;
+    cal->f = mq - cal->d * mx - cal->e * my;
 }
 
 esp_err_t touch_cal_load(touch_cal_t *cal, float *max_err_px)
@@ -85,10 +94,10 @@ esp_err_t touch_cal_load(touch_cal_t *cal, float *max_err_px)
     }
     /* Compute max error on calibration points */
     if (max_err_px) {
-        uint16_t rx[] = { 400, 3695, 3695, 400, 2048 };
-        uint16_t ry[] = { 400, 400,  3695, 3695, 2048 };
-        int      px[] = {  50,   670,   670,    50,  360 };
-        int      py[] = {  50,    50,   670,   670,  360 };
+        uint16_t rx[] = {  50,  670,  670,   50,  360 };
+        uint16_t ry[] = {  50,   50,  670,  670,  360 };
+        int      px[] = {  50,  670,  670,   50,  360 };
+        int      py[] = {  50,   50,  670,  670,  360 };
         float err_max = 0;
         for (int i = 0; i < 5; i++) {
             int cx, cy;
@@ -116,35 +125,70 @@ esp_err_t touch_cal_save(const touch_cal_t *cal, float max_err_px)
     return ret;
 }
 
+static void draw_target(int x, int y)
+{
+    ws_lcd_fill_rect(0, 0, LCD_W, LCD_H, 0x0000);
+    ws_lcd_fill_rect(x - 20, y - 1, 40, 3, 0xFFFF);
+    ws_lcd_fill_rect(x - 1, y - 20, 3, 40, 0xFFFF);
+}
+
 esp_err_t touch_cal_run(touch_cal_t *cal, float *max_err_px)
 {
-    /* 5-point calibration: ask user to tap centre of each cross.
-     * Screen coords in pixels; raw XPT2046 values are stored and matched. */
     uint16_t raw_rx[5], raw_ry[5];
-    int scr_px[5] = {  50,  670,  670,   50,  360 };
-    int scr_py[5] = {  50,   50,  670,  670,  360 };
+    int m = LCD_W / 12;
+    int scr_px[5] = { m, LCD_W - m, LCD_W - m, m, LCD_W / 2 };
+    int scr_py[5] = { m, m, LCD_H - m, LCD_H - m, LCD_H / 2 };
+
+    /* The screen is typically held to enter calibration; wait for release first. */
+    int64_t start = esp_timer_get_time() + 3000000;
+    while (esp_timer_get_time() < start) {
+        ws_touch_t pts[5];
+        if (ws_touch_read(pts, 5) <= 0) break;
+        vTaskDelay(pdMS_TO_TICKS(20));
+    }
 
     for (int i = 0; i < 5; i++) {
-        /* Show cross at (scr_px[i], scr_py[i]), wait for touch */
-        for (int attempt = 0; attempt < 60; attempt++) {
+        draw_target(scr_px[i], scr_py[i]);
+        raw_rx[i] = scr_px[i];
+        raw_ry[i] = scr_py[i];
+        bool got = false;
+        int64_t deadline = esp_timer_get_time() + 15000000;
+        while (!got && esp_timer_get_time() < deadline) {
             ws_touch_t pts[5];
-            int n = ws_touch_read(pts, 5);
-            if (n > 0) {
-                int dx = pts[0].x - scr_px[i];
-                int dy = pts[0].y - scr_py[i];
-                if (dx * dx + dy * dy < 900) {  /* within 30px */
-                    /* Convert pixel to raw XPT2046 (inverse scale) */
-                    raw_rx[i] = (uint16_t)((int64_t)pts[0].x * 4095 / LCD_W);
-                    raw_ry[i] = (uint16_t)((int64_t)pts[0].y * 4095 / LCD_H);
-                    break;
-                }
+            if (ws_touch_read(pts, 5) > 0) {
+                raw_rx[i] = pts[0].x;
+                raw_ry[i] = pts[0].y;
+                got = true;
+                break;
             }
-            vTaskDelay(pdMS_TO_TICKS(200));
+            vTaskDelay(pdMS_TO_TICKS(20));
+        }
+        if (!got) {
+            ESP_LOGW(TAG, "calibration point %d not touched: using 1:1 mapping", i + 1);
+            touch_cal_default(cal);
+            if (max_err_px) *max_err_px = -1;
+            return ESP_OK;
+        }
+        int64_t release = esp_timer_get_time() + 3000000;
+        while (esp_timer_get_time() < release) {
+            ws_touch_t pts[5];
+            if (ws_touch_read(pts, 5) <= 0) break;
+            vTaskDelay(pdMS_TO_TICKS(20));
         }
     }
 
     solve_affine(raw_rx, raw_ry, scr_px, scr_py, 5, cal);
-    touch_cal_save(cal, 0);
+
+    float err_max = 0;
+    for (int i = 0; i < 5; i++) {
+        int cx, cy;
+        touch_cal_map(cal, raw_rx[i], raw_ry[i], &cx, &cy);
+        float dx = cx - scr_px[i], dy = cy - scr_py[i];
+        float e = sqrtf(dx * dx + dy * dy);
+        if (e > err_max) err_max = e;
+    }
+    touch_cal_save(cal, err_max);
+    if (max_err_px) *max_err_px = err_max;
     return ESP_OK;
 }
 

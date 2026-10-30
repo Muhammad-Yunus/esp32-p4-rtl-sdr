@@ -12,6 +12,7 @@
 #include "esp_heap_caps.h"
 #include "driver/i2c_master.h"
 #include "driver/i2s_std.h"
+#include "ws_i2c.h"
 #include "esp_codec_dev.h"
 #include "esp_codec_dev_defaults.h"
 #include "es8311_codec.h"
@@ -93,14 +94,11 @@ static void audio_task(void *arg)
 
 bool audio_init(void)
 {
-    i2c_master_bus_handle_t bus;
-    i2c_master_bus_config_t bc = {.i2c_port = I2C_NUM_0, .sda_io_num = PIN_SDA, .scl_io_num = PIN_SCL,
-                                  .clk_source = I2C_CLK_SRC_DEFAULT, .glitch_ignore_cnt = 7,
-                                  .flags.enable_internal_pullup = true};
-    if (i2c_new_master_bus(&bc, &bus) != ESP_OK) return false;
+    if (ws_i2c_init() != ESP_OK) return false;
+    i2c_master_bus_handle_t bus = ws_i2c_bus();
+    if (!bus) return false;
     if (i2c_master_probe(bus, ES8311_CODEC_DEFAULT_ADDR >> 1, 50) != ESP_OK) {
         ESP_LOGW(TAG, "no ES8311 at 0x%02x: no audio", ES8311_CODEC_DEFAULT_ADDR >> 1);
-        i2c_del_master_bus(bus);
         return false;
     }
 

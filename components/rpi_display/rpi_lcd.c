@@ -4,11 +4,6 @@
  */
 #include "rpi_lcd.h"
 #include "ws_lcd.h"
-#include "esp_log.h"
-#include "freertos/FreeRTOS.h"
-#include "freertos/task.h"
-
-static const char *TAG = "rpi_lcd_compat";
 
 esp_err_t rpi_lcd_init(void)
 {

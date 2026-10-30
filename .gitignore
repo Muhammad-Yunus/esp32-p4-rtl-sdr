@@ -10,3 +10,14 @@ __pycache__/
 tools/demod_test/demod_test
 tools/bmp_test/bmp_test
 tools/agc_test/agc_test
+
+# Local build/flash logs and scratch files
+blink_build.txt
+build_log*.txt
+flash_log*.txt
+idf_flash*.txt
+read_flash.txt
+read_serial.py
+set_target.txt
+sdkconfig*.bak
+MIGRATION_BRAINSTORM.md

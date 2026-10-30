@@ -201,9 +201,6 @@ You need ESP-IDF **v6.1**.
 . $IDF_PATH/export.bat
 idf.py -p COM11 build
 idf.py -p COM11 flash monitor
-rm -f sdkconfig
-idf.py -D SDKCONFIG_DEFAULTS="sdkconfig.defaults;sdkconfig.rev1" build
-```
 
 The component manager fetches `esp_hosted` and `esp_codec_dev` on the first
 build. The hosted C6 link is stubbed; esp_codec_dev drives the speaker codec. The versions are

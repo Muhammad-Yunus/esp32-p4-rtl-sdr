@@ -214,7 +214,7 @@ rm -f sdkconfig
 idf.py -D SDKCONFIG_DEFAULTS="sdkconfig.defaults;sdkconfig.rev1" build
 ```
 
-The component manager fetches `esp_hosted`, `esp_wifi_remote` and `esp_codec_dev` on the first
+The component manager fetches `esp_hosted` and `esp_codec_dev` on the first
 build. The hosted C6 link is stubbed; esp_codec_dev drives the speaker codec. The versions are
 pinned in `dependencies.lock`. `tools/build_release.sh` builds both chip-revision images into
 `dist/`, along with `SHA256SUMS` and the Workbench manifest.

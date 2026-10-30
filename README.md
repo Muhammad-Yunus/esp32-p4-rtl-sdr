@@ -69,7 +69,7 @@ The screenshots come from `tools/preview` with made-up aircraft and neighbours.
 | Part | Notes |
 |---|---|
 | **Waveshare ESP32-P4-WIFI6-Touch-LCD-4B** | ESP32-P4 + ESP32-C6-MINI-1U (hosted over SDIO) for Wi-Fi/BLE. 720x720 ST7703 MIPI DSI, GT911 capacitive touch (I2C 0x5D), ES8311 codec + NS4150B amp, 32 MB flash/PSRAM. |
-| **RTL-SDR Blog V3/V4** (or V3) dongle and an antenna | Plugs into a native USB-A port. |
+| **RTL-SDR Blog V3/V4** dongle and an antenna | Plugs into a native USB-A port. |
 | A small speaker (optional) | Plugs into the kit's speaker connector (MX1.25), driven by ES8311/NS4150B. |
 | micro-SD card, FAT32 (optional) | Holds `MAP.BIN` for the ADS-B map, and the CSV logs. |
 
@@ -215,13 +215,13 @@ idf.py -D SDKCONFIG_DEFAULTS="sdkconfig.defaults;sdkconfig.rev1" build
 ```
 
 The component manager fetches `esp_hosted`, `esp_wifi_remote` and `esp_codec_dev` on the first
-build. The first two are the C6 link and the third drives the speaker codec. The versions are
+build. The hosted C6 link is stubbed; esp_codec_dev drives the speaker codec. The versions are
 pinned in `dependencies.lock`. `tools/build_release.sh` builds both chip-revision images into
 `dist/`, along with `SHA256SUMS` and the Workbench manifest.
 
 `tools/preview` builds the drawing code on a Mac or Linux PC, feeds it fake stations,
 aircraft and neighbours, and writes a PNG of every screen in every look, landscape and then
-portrait (`portrait-*.png`).
+portrait (720x720).
 `tools/adsb_test` runs the ADS-B decoder against known messages. `tools/demod_test` runs the audio
 demodulator on synthesized FM and AM stations (with a neighbour and a stereo pilot) and checks the
 tone that comes out and the squelch. It also builds a broadcast station with RDS groups and
@@ -253,7 +253,7 @@ leaves the board running and reattaches if the USB serial port drops out, which 
 | `main/sdlog.c` | CSV logs: PSRAM ring, writer task, per-boot file numbering |
 | `main/radio_scan.c`, `main/scan_view.c` | Wi-Fi and BLE scanning on the C6; their screens |
 | `components/rtlsdr` | librtlsdr (RTL-SDR Blog fork, unmodified) on a small libusb shim over the ESP-IDF USB host |
-| `components/rpi_display` | screen, text, off-screen canvas, touch and calibration (the driver from the screen repo) |
+| `components/waveshare_p4_lcd` | screen, text, off-screen canvas, touch and calibration (ST7703 + esp_lcd_touch_gt911) |
 | `tools/mapgen` | `make_map.py`, which makes `MAP.BIN` |
 | `tests/stage1_stream_test.c` | 20 s USB counter and sample test (copy it over `main/main.c` to run) |
 
@@ -261,7 +261,7 @@ Core 0 runs the USB host, the IQ stream and the audio demodulator. Core 1 runs t
 
 ## Measured (chip v1.0, RTL-SDR Blog V3/V4)
 
-- The dongle enumerates at USB high speed through the kit's CH334F hub.
+- The dongle enumerates at USB high speed directly on the ESP32-P4 native USB OTG port
 - Counter test, 20 s at 2.4 MS/s: 4.80 MB/s, **0 bytes lost**, 0 USB errors.
 - Receiver: 9.8 fps at FFT 1024 and 9.4 fps at FFT 4096. The IQ stream runs at 4.80 MB/s with
   0 USB errors.
@@ -280,13 +280,13 @@ Core 0 runs the USB host, the IQ stream and the audio demodulator. Core 1 runs t
   and 76% in two logs from before the port. No position jumped. For the 18 minutes the serial log
   covered, the decoder stayed at 22% load with 0 bytes dropped. The logs are from different days with different traffic, so treat the
   comparison as rough.
-- Audio demodulator on the receiver with the V4 streaming, WFM: 45 to 46% of core 0 on a station
+- Audio demodulator on the receiver with WFM streaming: 45 to 46% of core 0 on a station
   with RDS on the spectrum screen, and 39% with a menu open (no station tuned). Lag under 20 ms, no
   task watchdog, spectrum at 9.7 fps.
 - AGC on a strong local FM station, with weak RDS and the antenna in a poor spot: it settled at 12.5 dB
   with the band's peak at -8 to -11 dBFS and held there for a minute, and RDS stayed in sync with
-  34% of its blocks bad. A fixed 14.4 dB gave about 50% bad and 19.7 dB overloaded. The R828D's own
-  AGC, which 1.2.0 used, overloaded the dongle on such a station (#44).
+  34% of its blocks bad. A fixed 14.4 dB gave about 50% bad and 19.7 dB overloaded. The RTL2832U's built-in
+  AGC can overload on strong signals.
 - Boot picture: a 720x720 24-bit SPLASH.BMP (461 KB) is read in 374 ms. A card without one costs
   124 ms. Either way internal RAM is no lower afterwards, and the stream starts at 4.8 MB/s with
   0 USB errors.

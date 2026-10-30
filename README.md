@@ -299,4 +299,4 @@ GPL-3.0-or-later; see [LICENSE](LICENSE). librtlsdr is GPL-2.0-or-later, and fir
 it must be under the GPL. GPLv3 is used because it can be combined with ESP-IDF's Apache-2.0 code
 and GPLv2 cannot. Third-party parts and their licenses are listed in [THIRD_PARTY.md](THIRD_PARTY.md).
 
-Map data Â© OpenStreetMap contributors (ODbL) and Natural Earth (public domain).
+Map data © OpenStreetMap contributors (ODbL) and Natural Earth (public domain).

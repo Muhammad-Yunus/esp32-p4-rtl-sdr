@@ -2,6 +2,9 @@
 
 **An RTL-SDR Blog V4 dongle on a Waveshare ESP32-P4-WIFI6-Touch-LCD-4B (ESP32-P4 + ESP32-C6, 720x720 MIPI DSI, GT911 capacitive touch) makes a handheld spectrum and waterfall receiver. It has no Linux or PC behind it: native ESP-IDF firmware drives the dongle over USB.**
 
+Thank you to **John-ODell** for the original [esp32-p4-rtl-sdr](https://github.com/John-ODell/esp32-p4-rtl-sdr),
+from which this fork was created with hardware modifications for the Waveshare ESP32-P4-WIFI6-Touch-LCD-4B.
+
 Thank you to **John Stockdale**, whose [ADS-B Scope](https://github.com/jstockdale/T-Display-P4/tree/adsb)
 gave P4 SDR its single-frame aircraft positions and jump checks. RTL-SDR.com wrote it up:
 [Portable ADS-B receiver firmware for the LilyGO T-Display-P4](https://www.rtl-sdr.com/portable-ads-b-receiver-firmware-for-the-esp32-p4-based-lilygo-t-display-p4-with-rtl-sdr/).

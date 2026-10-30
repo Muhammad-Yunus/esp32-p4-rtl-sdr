@@ -79,16 +79,16 @@ The screenshots come from `tools/preview` with made-up aircraft and neighbours.
    esptool.py --chip esp32p4 -p PORT flash_id
    ```
    The output contains `Chip is ESP32-P4 (revision vX.Y)`.
-3. Download the matching image from the [latest release](https://github.com/John-ODell/esp32-p4-rtl-sdr/releases/latest):
+3. Download the image from the [latest release](https://github.com/Muhammad-Yunus/esp32-p4-rtl-sdr/releases/latest):
 
    | Image | Boots on | Status |
    |---|---|---|
-   | `p4-sdr-1.2.0-rev1.bin` | v1.x (early kits) | tested on v1.0 |
+   | smart-86-box-esp32p4-sdr-1.0.0.bin | ESP32-P4-WIFI6-Touch-LCD-4B | tested |
    | `p4-sdr-1.2.0-rev3.bin` | v3.1 and later | built, not tested on hardware |
 
 4. Flash it:
    ```bash
-   esptool.py --chip esp32p4 -p PORT -b 921600 write_flash 0x0 p4-sdr-1.2.0-rev1.bin
+   esptool.py --chip esp32p4 -p PORT -b 921600 write_flash 0x0 smart-86-box-esp32p4-sdr-1.0.0.bin
    ```
    `PORT` looks like `/dev/cu.usbmodemâ€¦` on macOS, `/dev/ttyACM0` on Linux, or `COM5` on Windows.
    The image is a full flash image, so it clears saved settings and the touch calibration.

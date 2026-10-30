@@ -220,8 +220,7 @@ pinned in `dependencies.lock`. `tools/build_release.sh` builds both chip-revisio
 `dist/`, along with `SHA256SUMS` and the Workbench manifest.
 
 `tools/preview` builds the drawing code on a Mac or Linux PC, feeds it fake stations,
-aircraft and neighbours, and writes a PNG of every screen in every look, landscape and then
-portrait (720x720).
+aircraft and neighbours, and writes a PNG of every screen in every look, portrait (720x720).
 `tools/adsb_test` runs the ADS-B decoder against known messages. `tools/demod_test` runs the audio
 demodulator on synthesized FM and AM stations (with a neighbour and a stereo pilot) and checks the
 tone that comes out and the squelch. It also builds a broadcast station with RDS groups and

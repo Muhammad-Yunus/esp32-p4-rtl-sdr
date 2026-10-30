@@ -1,17 +1,12 @@
-# P4 SDR: RTL-SDR receiver, ADS-B and Wi-Fi/BLE scanner on the ESP32-P4
+﻿# P4 SDR: RTL-SDR receiver, ADS-B and Wi-Fi/BLE scanner on the ESP32-P4
 
-**An RTL-SDR Blog V4 dongle, a Waveshare ESP32-P4 kit and the cheap 3.5" Raspberry Pi
-touchscreen make a handheld spectrum and waterfall receiver. It has no Linux or PC behind it:
-native ESP-IDF firmware drives the dongle over USB.**
+**An RTL-SDR Blog V4 dongle on a Waveshare ESP32-P4-WIFI6-Touch-LCD-4B (ESP32-P4 + ESP32-C6, 720x720 MIPI DSI, GT911 capacitive touch) makes a handheld spectrum and waterfall receiver. It has no Linux or PC behind it: native ESP-IDF firmware drives the dongle over USB.**
 
 Thank you to **John Stockdale**, whose [ADS-B Scope](https://github.com/jstockdale/T-Display-P4/tree/adsb)
 gave P4 SDR its single-frame aircraft positions and jump checks. RTL-SDR.com wrote it up:
 [Portable ADS-B receiver firmware for the LilyGO T-Display-P4](https://www.rtl-sdr.com/portable-ads-b-receiver-firmware-for-the-esp32-p4-based-lilygo-t-display-p4-with-rtl-sdr/).
 
-> **Just want the 3.5" screen working on the P4?** Use
-> [esp32-p4-3.5-inch-rpi-display](https://github.com/John-ODell/esp32-p4-3.5-inch-rpi-display).
-> It holds the screen driver on its own, plus a small flash-and-test tool. It is MIT licensed
-> and needs no dongle. This repository is the full radio tool built on that driver.
+> This fork targets the Waveshare **ESP32-P4-WIFI6-Touch-LCD-4B** (ST7703 720x720 MIPI DSI, GT911 I2C touch). The original used a MHS 3.5" ILI9486 SPI panel; see [docs/](docs/) for migration notes.
 
 <p align="center"><img src="docs/images/looks.png" alt="Receiver and menu in the five looks" width="640"></p>
 
@@ -39,17 +34,17 @@ gave P4 SDR its single-frame aircraft positions and jump checks. RTL-SDR.com wro
 - **Five looks**: Studio, PortaPack, Phosphor, Vintage and Neon.
 - **Landscape or portrait.** Portrait stands the kit up with its USB ports, and the dongle, at the
   top. Every screen has a portrait layout.
-- Big touch keys made for a resistive panel. They light up under your finger and fire when you
-  lift it. Settings are saved to flash.
+- Big touch keys for the GT911 capacitive panel. They light up under your finger and fire when you
+  lift it. Settings are saved to flash. Calibration is optional (hold the screen at boot).
 
 <table align="center">
   <tr>
-    <td><img src="docs/images/adsb-map.png" alt="ADS-B map" width="320"></td>
-    <td><img src="docs/images/adsb-list.png" alt="ADS-B aircraft list" width="320"></td>
+    <td><img src="docs/images/adsb-map.png" alt="ADS-B map" width="240"></td>
+    <td><img src="docs/images/adsb-list.png" alt="ADS-B aircraft list" width="240"></td>
   </tr>
   <tr>
-    <td><img src="docs/images/wifi-list.png" alt="Wi-Fi scanner list" width="320"></td>
-    <td><img src="docs/images/ble.png" alt="BLE scanner" width="320"></td>
+    <td><img src="docs/images/wifi-list.png" alt="Wi-Fi scanner list" width="240"></td>
+    <td><img src="docs/images/ble.png" alt="BLE scanner" width="240"></td>
   </tr>
 </table>
 
@@ -59,21 +54,20 @@ The screenshots come from `tools/preview` with made-up aircraft and neighbours.
 
 <table align="center">
   <tr>
-    <td align="center"><img src="docs/images/esp32-p4-module-dev-kit.jpg" alt="Waveshare ESP32-P4-Module-DEV-KIT" height="122"></td>
-    <td align="center"><img src="docs/images/mhs-3.5inch-display-ips.jpg" alt="Back of the MHS-3.5inch Display-IPS: one square chip, the XPT2046 touch controller and the 40-pin socket" height="280"></td>
+    <td align="center"><img src="docs/images/ESP32-P4-Smart-86-Box.jpg" alt="Waveshare ESP32-P4-WIFI6-Touch-LCD-4B" height="180"></td>
+    <td align="center"><img src="docs/images/RTL-SDR_V3_black.jpg" alt="RTL-SDR Blog V3 dongle" height="180"></td>
   </tr>
   <tr>
-    <td align="center">Waveshare ESP32-P4-Module-DEV-KIT</td>
-    <td align="center">MHS-3.5inch Display-IPS (the tested screen)</td>
+    <td align="center">Waveshare ESP32-P4-WIFI6-Touch-LCD-4B</td>
+    <td align="center">RTL-SDR Blog V3/V4 dongle</td>
   </tr>
 </table>
 
 | Part | Notes |
 |---|---|
-| Waveshare **ESP32-P4-Module-DEV-KIT** | The module carries an ESP32-C6, which runs the Wi-Fi and BLE scanners. |
-| **MHS-3.5inch Display-IPS** (480×320, ILI9486 commands over 16-bit SPI, XPT2046 resistive touch) | The tested screen. Plugs straight onto the kit's 40-pin header, pin 1 to pin 1. The older MPI3501 "3.5inch RPi Display" (four logic chips on the back) uses the same protocol but hasn't been tested. See [Is this my screen?](https://github.com/John-ODell/esp32-p4-3.5-inch-rpi-display#is-this-my-screen) |
-| **RTL-SDR Blog V4** dongle and an antenna | It goes in one of the kit's USB-A ports. Set the **H3 jumper** for USB host: on our kit that's the cap on the two pins nearest the **DEVICE** label (the HOST end found no devices). If the dongle isn't found, move the cap to the other pair. This is the only dongle tested so far. |
-| A small speaker, 8 Ω (optional) | Plugs into the kit's 2-pin speaker connector (MX1.25), driven by the on-board ES8311 codec and NS4150B amplifier. |
+| **Waveshare ESP32-P4-WIFI6-Touch-LCD-4B** | ESP32-P4 + ESP32-C6-MINI-1U (hosted over SDIO) for Wi-Fi/BLE. 720x720 ST7703 MIPI DSI, GT911 capacitive touch (I2C 0x5D), ES8311 codec + NS4150B amp, 32 MB flash/PSRAM. |
+| **RTL-SDR Blog V4** (or V3) dongle and an antenna | Plugs into a native USB-A port. |
+| A small speaker (optional) | Plugs into the kit's speaker connector (MX1.25), driven by ES8311/NS4150B. |
 | micro-SD card, FAT32 (optional) | Holds `MAP.BIN` for the ADS-B map, and the CSV logs. |
 
 ## Flash the prebuilt firmware
@@ -95,7 +89,7 @@ The screenshots come from `tools/preview` with made-up aircraft and neighbours.
    ```bash
    esptool.py --chip esp32p4 -p PORT -b 921600 write_flash 0x0 p4-sdr-1.2.0-rev1.bin
    ```
-   `PORT` looks like `/dev/cu.usbmodem…` on macOS, `/dev/ttyACM0` on Linux, or `COM5` on Windows.
+   `PORT` looks like `/dev/cu.usbmodemâ€¦` on macOS, `/dev/ttyACM0` on Linux, or `COM5` on Windows.
    The image is a full flash image, so it clears saved settings and the touch calibration.
 
 Check downloads against `SHA256SUMS` on the release page. Web flashers can read
@@ -108,8 +102,7 @@ SHA-256 and the chip revisions it boots on.
    your own picture (see "Your own boot picture"). On first boot it runs the 5-point touch
    calibration: tap the centre of each cross.
    To redo it later, hold the screen during the splash.
-2. **Dongle.** It looks for the RTL-SDR on the USB-A ports. If nothing shows up, move the H3
-   cap to the other pair of pins, then unplug the dongle and plug it back in.
+2. **Dongle.** It looks for the RTL-SDR on the USB-A ports. If nothing shows up, unplug and replug it.
 3. **Link check.** A 1.5 s USB test in which the dongle sends a byte counter, so any lost byte is
    caught.
 4. **Receiver.** It starts at 100.0 MHz, in the FM broadcast band, and after that at the last frequency used.
@@ -142,15 +135,7 @@ The menu is eight big tiles:
 Every mode (ADS-B, Wi-Fi, BLE) takes over the whole screen and pauses the receiver. EXIT
 starts the receiver again.
 
-### Portrait
-
-**Look › Turn** switches to portrait: hold the kit with its USB-A and Ethernet ports at the top. The
-step keys move to a row under the frequency, the menu stands two tiles wide, and the ADS-B and
-scanner keys sit in a row under their title. The choice is saved and used from the boot screen on.
-Touch calibration is kept in landscape and turned in software, so no recalibration is needed.
-
-<p align="center"><img src="docs/images/portrait.png" alt="Portrait: receiver in the Neon look, menu, ADS-B map and Wi-Fi list" width="640"></p>
-
+GT911 returns pixel coordinates directly; optional 5-point calibration can be run by holding the screen at boot if needed.
 ## ADS-B map on a micro-SD card
 
 The map is a small file made on a computer from Natural Earth data, plus OpenStreetMap detail
@@ -175,12 +160,12 @@ Put a `SPLASH.BMP` in the root of the card and it replaces the drawn name and ba
 status lines and the "hold screen to recalibrate" footer are drawn over it. The file must be:
 
 - 24- or 32-bit, uncompressed;
-- exactly the screen's size in the orientation the kit boots in: 480×320, or 320×480 in portrait.
+exactly the screen's size: 720x720.
 
 On a Mac, `sips` makes one from any picture (it takes the height first):
 
 ```bash
-sips -z 320 480 -s format bmp picture.png --out /Volumes/SDCARD/SPLASH.BMP
+sips -z 720 720 -s format bmp picture.png --out /Volumes/SDCARD/SPLASH.BMP
 ```
 
 A file of the wrong size or format is ignored, with a line in the serial log saying why. The card is
@@ -210,7 +195,7 @@ The header shows a red dot and **REC** while it records (just the dot where spac
 
 ## Build from source
 
-You need ESP-IDF **v5.5** (tested with v5.5.5).
+You need ESP-IDF **v6.1**.
 
 ```bash
 . $IDF_PATH/export.sh
@@ -239,7 +224,7 @@ demodulator on synthesized FM and AM stations (with a neighbour and a stereo pil
 tone that comes out and the squelch. It also builds a broadcast station with RDS groups and
 checks the decoded ID, name and RadioText, with the station's clock up to 100 ppm off.
 `tools/bmp_test` checks the BMP reader pixel by pixel on bottom-up, top-down, padded and 32-bit
-files, and that it refuses the ones it should. `tools/agc_test` runs the AGC against a model of the R828D's gain steps, some of which do twice
+files, and that it refuses the ones it should. `tools/agc_test` runs the AGC against a model of the tuner gain steps
 what their labels say, with a band that jitters 3 dB from frame to frame, and checks that it settles
 near the top of the ADC without overloading or hunting.
 `tools/capture_log.py PORT SECONDS` resets the kit and prints its serial log. With `--attach` it
@@ -299,7 +284,7 @@ Core 0 runs the USB host, the IQ stream and the audio demodulator. Core 1 runs t
   with the band's peak at -8 to -11 dBFS and held there for a minute, and RDS stayed in sync with
   34% of its blocks bad. A fixed 14.4 dB gave about 50% bad and 19.7 dB overloaded. The R828D's own
   AGC, which 1.2.0 used, overloaded the dongle on such a station (#44).
-- Boot picture: a 480×320 24-bit `SPLASH.BMP` (461 KB) is read in 374 ms. A card without one costs
+- Boot picture: a 720x720 24-bit SPLASH.BMP (461 KB) is read in 374 ms. A card without one costs
   124 ms. Either way internal RAM is no lower afterwards, and the stream starts at 4.8 MB/s with
   0 USB errors.
 - Internal RAM: 75 KB free on the receiver at boot. The first Wi-Fi or BLE visit costs 11 KB once
@@ -327,4 +312,4 @@ GPL-3.0-or-later; see [LICENSE](LICENSE). librtlsdr is GPL-2.0-or-later, and fir
 it must be under the GPL. GPLv3 is used because it can be combined with ESP-IDF's Apache-2.0 code
 and GPLv2 cannot. Third-party parts and their licenses are listed in [THIRD_PARTY.md](THIRD_PARTY.md).
 
-Map data © OpenStreetMap contributors (ODbL) and Natural Earth (public domain).
+Map data Â© OpenStreetMap contributors (ODbL) and Natural Earth (public domain).

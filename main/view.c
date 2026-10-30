@@ -4,7 +4,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <inttypes.h>
-#include "rpi_lcd.h"
+#include "ws_lcd.h"
 #include "rpi_text.h"
 #include "rpi_canvas.h"
 #include "pins.h"
@@ -301,14 +301,14 @@ void view_set_theme(int i)
     s_wf_head = 0;
     memset(s_wf, 0, 2 * MAX_WF_H * LCD_LONG * 2);
     build_tables();
-    rpi_lcd_fill_rect(0, 0, LCD_W, LCD_H, T->bg);
+    ws_lcd_fill_rect(0, 0, LCD_W, LCD_H, T->bg);
 }
 
 void view_reset(void)
 {
     s_have = false;
-    rpi_lcd_fill_rect(0, s_spec_y, LCD_W, s_spec_h, T->bg);
-    rpi_lcd_fill_rect(0, s_wf_y, LCD_W, s_wf_h, 0);
+    ws_lcd_fill_rect(0, s_spec_y, LCD_W, s_spec_h, T->bg);
+    ws_lcd_fill_rect(0, s_wf_y, LCD_W, s_wf_h, 0);
 }
 
 /* ---------------------------------------------------------------- seven segments -- */
@@ -501,7 +501,7 @@ void view_header(uint32_t freq, const char *gain, int pressed)
         x += seg_freq(&c, x, y, freq, T->hdr == HDR_PHOSPHOR ? 16 : 22, glow);
         rpi_cv_text(&c, x + 2, y + SEG_H - 15, "MHz", T->dim, 1);
     }
-    rpi_lcd_blit(0, 0, LCD_W, s_hdr_h, s_hdr);
+    ws_lcd_blit(0, 0, LCD_W, s_hdr_h, s_hdr);
 }
 
 int view_button_at(int x, int y)
@@ -555,7 +555,7 @@ void view_axis(uint32_t freq)
     } else {
         for (int k = 0; k < 4; k++) rpi_cv_fill(&c, LCD_W / 2 - 3 + k, k, 7 - 2 * k, 1, T->center);
     }
-    rpi_lcd_blit(0, s_axis_y, LCD_W, h, s_axis);
+    ws_lcd_blit(0, s_axis_y, LCD_W, h, s_axis);
 }
 
 /* ---------------------------------------------------------------------- spectrum -- */
@@ -787,8 +787,8 @@ void view_render(const float *db, int n, uint32_t freq)
     push_waterfall_line();
 }
 
-void view_blit_spectrum(void) { rpi_lcd_blit(0, s_spec_y, LCD_W, s_spec_h, s_spec); }
-void view_blit_waterfall(void) { rpi_lcd_blit(0, s_wf_y, LCD_W, s_wf_h, s_wf + (size_t)s_wf_head * LCD_W); }
+void view_blit_spectrum(void) { ws_lcd_blit(0, s_spec_y, LCD_W, s_spec_h, s_spec); }
+void view_blit_waterfall(void) { ws_lcd_blit(0, s_wf_y, LCD_W, s_wf_h, s_wf + (size_t)s_wf_head * LCD_W); }
 
 void view_blit(void)
 {
@@ -846,7 +846,7 @@ void view_splash_line(int y, const char *s, int tone)
     for (int r = 0; r < 16; r++) rpi_cv_fill(&c, 0, r, LCD_W, 1, spl_bg(y + r));
     int x = (LCD_W - rpi_cv_text_w(s, 1)) / 2;
     rpi_cv_text(&c, x < 0 ? 0 : x, 0, s, tone == SPLASH_DIM ? T->dim : tone >= SPLASH_OK ? tones[tone - SPLASH_OK] : spl_fg(), 1);
-    rpi_lcd_blit(0, y, LCD_W, 16, px);
+    ws_lcd_blit(0, y, LCD_W, 16, px);
 }
 
 void view_splash(int frame, int frames, const char *sub)
@@ -902,21 +902,21 @@ void view_splash(int frame, int frames, const char *sub)
             px[(wy + r) * LCD_W + x] = s_lut[v > 255 ? 255 : v];
         }
     }
-    if (frame == 0) rpi_lcd_blit(0, 0, LCD_W, LCD_H, px);
-    else rpi_lcd_blit(0, by, LCD_W, SPL_SPEC + 2 + SPL_WF, px + by * LCD_W);
+    if (frame == 0) ws_lcd_blit(0, 0, LCD_W, LCD_H, px);
+    else ws_lcd_blit(0, by, LCD_W, SPL_SPEC + 2 + SPL_WF, px + by * LCD_W);
 }
 
 bool view_splash_image(const uint8_t *bmp, size_t len)
 {
     if (!bmp_to_565(bmp, len, LCD_W, LCD_H, s_wf)) return false;
-    rpi_lcd_blit(0, 0, LCD_W, LCD_H, s_wf);
+    ws_lcd_blit(0, 0, LCD_W, LCD_H, s_wf);
     return true;
 }
 
 void view_message(const char *a, const char *b)
 {
     uint16_t bg = T->bg, fg = T->hdr == HDR_VINTAGE ? T->trace : T->txt;
-    rpi_lcd_fill_rect(0, s_spec_y, LCD_W, LCD_H - s_spec_y, bg);
+    ws_lcd_fill_rect(0, s_spec_y, LCD_W, LCD_H - s_spec_y, bg);
     rpi_lcd_text(LCD_W / 2 - (int)strlen(a) * 4, 180, a, RGB565(255, 96, 72), bg, 1);
     if (b) rpi_lcd_text(LCD_W / 2 - (int)strlen(b) * 4, 200, b, fg, bg, 1);
 }

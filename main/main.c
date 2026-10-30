@@ -15,7 +15,7 @@
 #include "esp_timer.h"
 #include "nvs_flash.h"
 #include "nvs.h"
-#include "rpi_lcd.h"
+#include "ws_lcd.h"
 #include "xpt2046.h"
 #include "touch_cal.h"
 #include "pins.h"
@@ -111,7 +111,7 @@ static void load_settings(void)
     if (nvs_open("sdr", NVS_READONLY, &h) != ESP_OK) return;
     uint32_t f;
     int32_t g, p;
-    if (nvs_get_i32(h, "port", &p) == ESP_OK && p) rpi_lcd_set_portrait(true);
+    if (nvs_get_i32(h, "port", &p) == ESP_OK && p) ws_lcd_set_portrait(true);
     if (nvs_get_u32(h, "freq", &f) == ESP_OK) sdr_set_freq(f);
     if (nvs_get_i32(h, "gaint", &g) == ESP_OK) sdr_set_gain_tenths(g);   /* applied on open */
     if (nvs_get_i32(h, "theme", &p) == ESP_OK) s_theme = p;
@@ -155,7 +155,7 @@ void app_main(void)
         r = nvs_flash_init();
     }
     ESP_ERROR_CHECK(r);
-    ESP_ERROR_CHECK(rpi_lcd_init());
+    ESP_ERROR_CHECK(ws_lcd_init());
     ESP_ERROR_CHECK(xpt2046_init());
     xTaskCreatePinnedToCore(main_task, "sdr_ui", 8192, NULL, 5, NULL, 1);
 }

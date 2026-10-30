@@ -1,7 +1,7 @@
-## Wi-Fi and BLE come from the kit's ESP32-C6 over SDIO (ESP-Hosted). Versions match
-## Waveshare's 10_wifistation example for IDF 5.x, which suits the C6's factory firmware.
+## Radio scanning is currently stubbed. The 4B uses an ESP32-C6 over SDIO (esp_hosted);
+## hosted Wi-Fi/BLE support is not wired in yet.
 dependencies:
-  espressif/esp_wifi_remote: "0.14.*"
-  espressif/esp_hosted: "1.4.*"
-  ## ES8311 speaker codec on the kit (I2C 0x18, I2S, NS4150B amplifier on GPIO53)
-  espressif/esp_codec_dev: "1.6.*"
+  ## ES8311 speaker codec (I2C + I2S), NS4150B amplifier on GPIO53
+  espressif/esp_codec_dev: 1.6.*
+  ## RTL-SDR dongle V3 via USB (bulk IN/OUT endpoint through esp-usb)
+  espressif/usb: '*'

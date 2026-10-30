@@ -5,4 +5,6 @@
 int rpi_lcd_text(int x, int y, const char *s, uint16_t fg, uint16_t bg, int scale);
 int rpi_lcd_textf(int x, int y, uint16_t fg, uint16_t bg, int scale, const char *fmt, ...)
     __attribute__((format(printf, 6, 7)));
+#ifndef RGB565
 #define RGB565(r, g, b) ((uint16_t)((((r) & 0xF8) << 8) | (((g) & 0xFC) << 3) | ((b) >> 3)))
+#endif

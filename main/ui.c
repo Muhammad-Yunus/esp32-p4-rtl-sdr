@@ -15,7 +15,7 @@
 #include "esp_timer.h"
 #include "esp_heap_caps.h"
 #include "nvs.h"
-#include "rpi_lcd.h"
+#include "ws_lcd.h"
 #include "rpi_text.h"
 #include "xpt2046.h"
 #include "pins.h"
@@ -265,7 +265,7 @@ static void set_look(int i)
 static void turn(void)
 {
     bool p = !LCD_PORTRAIT;
-    rpi_lcd_set_portrait(p);
+    ws_lcd_set_portrait(p);
     nvs_set_i32(s_nvs, "port", p);
     nvs_commit(s_nvs);
     ESP_LOGI(TAG, "%s", p ? "portrait" : "landscape");

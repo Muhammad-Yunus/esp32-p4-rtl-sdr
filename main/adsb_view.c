@@ -2,7 +2,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include "rpi_lcd.h"
+#include "ws_lcd.h"
 #include "rpi_text.h"
 #include "rpi_canvas.h"
 #include "pins.h"
@@ -303,7 +303,7 @@ void adsb_view_draw(const adsb_view_info_t *in)
     draw_bar(&c, in);
     if (s_map) draw_map(&c, in);
     else draw_list(&c);
-    rpi_lcd_blit(0, 0, LCD_W, LCD_H, s_px);
+    ws_lcd_blit(0, 0, LCD_W, LCD_H, s_px);
 }
 
 void adsb_view_open(void)
@@ -317,7 +317,7 @@ static void redraw_bar(void)
 {
     rpi_canvas_t c = {s_px, LCD_W, LCD_H};
     draw_bar(&c, &s_last);
-    rpi_lcd_blit(0, 0, LCD_W, BAR_H, s_px);
+    ws_lcd_blit(0, 0, LCD_W, BAR_H, s_px);
 }
 
 int adsb_view_touch(int ev, int x, int y)

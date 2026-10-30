@@ -1,0 +1,66 @@
+menu "Waveshare ESP32-P4-WIFI6-Touch-LCD-4B display"
+
+    config WAVESHARE_P4_LCD_PANEL_WIDTH
+        int "LCD panel width in pixels"
+        default 720
+        help
+            Horizontal resolution of the 4" square IPS panel.
+
+    config WAVESHARE_P4_LCD_PANEL_HEIGHT
+        int "LCD panel height in pixels"
+        default 720
+        help
+            Vertical resolution of the 4" square IPS panel.
+
+    # LCD pins — MIPI DSI driver uses these for reset
+    config WAVESHARE_P4_LCD_PIN_RST
+        int "LCD reset GPIO"
+        default 27
+        help
+            GPIO for LCD reset (active low).
+
+    config WAVESHARE_P4_LCD_PIN_BL_EN
+        int "LCD backlight enable GPIO"
+        default 33
+        help
+            GPIO to enable backlight power rail.
+
+    config WAVESHARE_P4_LCD_PIN_BL_PWM
+        int "LCD backlight PWM GPIO"
+        default 26
+        help
+            GPIO for backlight brightness LEDC PWM.
+
+    # GT911 touch I2C pins
+    config WAVESHARE_P4_LCD_PIN_TP_SDA
+        int "GT911 touch SDA GPIO"
+        default 7
+        help
+            I2C data pin for GT911 capacitive touch controller.
+
+    config WAVESHARE_P4_LCD_PIN_TP_SCL
+        int "GT911 touch SCL GPIO"
+        default 8
+        help
+            I2C clock pin for GT911 capacitive touch controller.
+
+    config WAVESHARE_P4_LCD_PIN_TP_RST
+        int "GT911 touch reset GPIO"
+        default 23
+        help
+            GPIO for GT911 reset (active low).
+
+    config WAVESHARE_P4_LCD_TOUCH_I2C_FREQ
+        int "Touch I2C clock frequency, Hz"
+        default 400000
+        range 100000 1000000
+        help
+            I2C clock speed for GT911 (400 kHz fast mode recommended).
+
+    config WAVESHARE_P4_LCD_ROTATE_180
+        bool "Rotate 180 degrees"
+        default n
+        help
+            Flip the display orientation 180°. Recalibrate touch after changing.
+
+endmenu

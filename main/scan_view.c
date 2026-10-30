@@ -1,7 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include "rpi_lcd.h"
+#include "ws_lcd.h"
 #include "rpi_canvas.h"
 #include "rpi_text.h"
 #include "pins.h"
@@ -309,14 +309,14 @@ void scan_view_draw(const scan_view_info_t *in)
     else if (in->kind == SV_WIFI && s_chan) draw_wifi_chan(&c, in);
     else if (in->kind == SV_WIFI) draw_wifi_list(&c, in);
     else draw_ble_list(&c, in);
-    rpi_lcd_blit(0, 0, LCD_W, LCD_H, s_px);
+    ws_lcd_blit(0, 0, LCD_W, LCD_H, s_px);
 }
 
 static void redraw_bar(void)
 {
     rpi_canvas_t c = {s_px, LCD_W, LCD_H};
     draw_bar(&c, &s_last);
-    rpi_lcd_blit(0, 0, LCD_W, BAR_H, s_px);
+    ws_lcd_blit(0, 0, LCD_W, BAR_H, s_px);
 }
 
 int scan_view_touch(int ev, int x, int y)

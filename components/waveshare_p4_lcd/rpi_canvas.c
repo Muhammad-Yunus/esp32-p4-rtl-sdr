@@ -15,7 +15,6 @@ void rpi_cv_fill(const rpi_canvas_t *c, int x, int y, int w, int h, uint16_t col
 
 void rpi_cv_rrect(const rpi_canvas_t *c, int x, int y, int w, int h, int r, uint16_t col)
 {
-    /* corner insets for radius 0..8, from a quarter circle */
     static const uint8_t ins[9][8] = {
         {0}, {1}, {1, 0}, {2, 1, 0}, {2, 1, 0, 0}, {3, 2, 1, 0, 0},
         {3, 2, 1, 1, 0, 0}, {4, 2, 2, 1, 0, 0, 0}, {4, 3, 2, 1, 1, 0, 0, 0},
@@ -49,6 +48,15 @@ int rpi_cv_text(const rpi_canvas_t *c, int x, int y, const char *s, uint16_t fg,
         }
     }
     return x;
+}
+
+int rpi_cv_text_w(const char *s, int scale)
+{
+    int n = 0;
+    while (s[n]) n++;
+    if (scale < 1) scale = 1;
+    if (scale > 2) scale = 2;
+    return n * 8 * scale;
 }
 
 uint16_t rpi_mix565(uint16_t a, uint16_t b, int t)

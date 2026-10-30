@@ -2,7 +2,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include "rpi_lcd.h"
+#include "ws_lcd.h"
 #include "rpi_text.h"
 #include "rpi_canvas.h"
 #include "pins.h"
@@ -255,7 +255,7 @@ static void blit_rows(int y0, int h)
 {
     if (y0 < 0) { h += y0; y0 = 0; }
     if (y0 + h > s_h) h = s_h - y0;
-    if (h > 0) rpi_lcd_blit(0, K.top + y0, LCD_W, h, s_px + y0 * LCD_W);
+    if (h > 0) ws_lcd_blit(0, K.top + y0, LCD_W, h, s_px + y0 * LCD_W);
 }
 
 static void show_all(const ctl_t *c)

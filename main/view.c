@@ -130,8 +130,8 @@ static const theme_t s_themes[] = {
 #undef C
 #define NTHEMES ((int)(sizeof s_themes / sizeof s_themes[0]))
 #define PORT_KEYS  40                        /* portrait: a row of step keys under the header */
-#define PORT_SPEC  24                        /* and a taller spectrum */
-#define MAX_SPEC_H (128 + PORT_SPEC)
+#define SPECTRUM_PCT  40                     /* spectrum as % of LCD_H in portrait */
+#define MAX_SPEC_H 288
 #define MAX_HDR_H  (54 + PORT_KEYS)
 #define MAX_AXIS_H 24
 #define MAX_WF_H   LCD_LONG
@@ -284,7 +284,7 @@ static void layout(void)
     s_btn[VIEW_GAIN] = (button_t){LCD_W - 56, y, 52, h, NULL};
     s_btn[VIEW_THEME] = (button_t){4, y, LCD_W - 64, h, NULL};
     s_hdr_h = T->hdr_h + PORT_KEYS;
-    s_spec_h = T->spec_h + PORT_SPEC;
+    s_spec_h = LCD_H * SPECTRUM_PCT / 100;
     s_ro_x0 = 4;
     s_ro_x1 = LCD_W - 60;
 }
@@ -462,7 +462,7 @@ void view_header(uint32_t freq, const char *gain, int pressed)
     if (T->hdr == HDR_PORTAPACK) {           /* title bar */
         rpi_cv_fill(&c, 0, 0, LCD_W, 16, RGB565(48, 48, 64));
         rpi_cv_text(&c, 4, 0, "<", T->txt, 1);
-        rpi_cv_text(&c, 20, 0, "Spectrum  RTL-SDR V4", T->txt, 1);
+        rpi_cv_text(&c, 20, 0, "Spectrum  RTL-SDR V3/V4", T->txt, 1);
         const char *r = "2.4 MS/s";
         rpi_cv_text(&c, LCD_W - 4 - rpi_cv_text_w(r, 1), 0, r, T->dim, 1);
     }
@@ -801,7 +801,7 @@ void view_blit(void)
 /* Boot screen in the current look: the name in large letters, then a made-up band tuning in.
  * A sweep runs left to right, five stations rise out of the noise behind it, and the waterfall
  * under them fills from the top. Drawn into the waterfall buffer (the receiver clears it). */
-#define SPL_SPEC 70
+#define SPL_SPEC (LCD_H * SPECTRUM_PCT / 100)
 #define SPL_WF   40
 
 static int spl_top(void) { return (LCD_H - 24 - 268) / 2; }       /* the block over the footer line */

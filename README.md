@@ -1,6 +1,8 @@
 ﻿# P4 SDR: RTL-SDR receiver, ADS-B and Wi-Fi/BLE scanner on the ESP32-P4
 **An RTL-SDR Blog V3/V4 dongle on a Waveshare ESP32-P4-WIFI6-Touch-LCD-4B (ESP32-P4 + ESP32-C6, 720x720 MIPI DSI, GT911 capacitive touch) makes a handheld spectrum and waterfall receiver. It has no Linux or PC behind it: native ESP-IDF firmware drives the dongle over USB.**
 
+<p align="center"><img src="docs/images/banner.jpg" alt="Waveshare ESP32-P4-WIFI6-Touch-LCD-4B" width="100%"></p>
+
 Thank you to **John-ODell** for the original [esp32-p4-rtl-sdr](https://github.com/John-ODell/esp32-p4-rtl-sdr),
 from which this fork was created with hardware modifications for the Waveshare ESP32-P4-WIFI6-Touch-LCD-4B.
 

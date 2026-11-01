@@ -12,7 +12,7 @@
 #include <stdint.h>
 #include "spectrum.h"
 
-enum { VIEW_DN1M, VIEW_DN100K, VIEW_UP100K, VIEW_UP1M, VIEW_GAIN, VIEW_THEME, VIEW_NBTN };
+enum { VIEW_DN1M, VIEW_DN100K, VIEW_UP100K, VIEW_UP1M, VIEW_GAIN, VIEW_THEME, VIEW_VOL, VIEW_NBTN };
 
 void view_init(uint32_t sample_rate);        /* allocates the frame buffers, aborts if out of memory */
 int view_themes(void);
@@ -53,6 +53,9 @@ enum { SPLASH_TEXT, SPLASH_DIM, SPLASH_OK, SPLASH_BAD };
 void view_splash_line(int y, const char *s, int tone);
 int view_button_at(int x, int y);            /* VIEW_* under a header touch, or -1 */
 int view_tune_y(void);                       /* touches at or below this row tune */
+void view_popup_vol(int vol);                /* draw volume popup overlay on spectrum */
+bool view_popup_tap(int x, int y);           /* tap on popup: true = dismiss */
+int  view_popup_vol_button(int x, int y);    /* VOL_DN/VOL_UP/VOL_NONE outside popup */
 float view_floor(void);
 
 /* Theme colours for other screens drawn in the same look (panel.c). */

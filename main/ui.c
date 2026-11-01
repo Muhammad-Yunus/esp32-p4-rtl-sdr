@@ -48,6 +48,7 @@ static float s_db[NFFT_MAX];
 static ctl_t s_ctl = {.range_auto = true, .ref_db = -20, .range_db = 60, .band = -1,
                       .gain_label = sdr_gain_label, .gain_tenths = sdr_gain_tenths, .agc_tenths = sdr_agc_tenths};
 static bool s_panel;                        /* Controls panel is up */
+static bool s_vol_popup;                    /* volume popup overlay is up */
 static bool s_adsb, s_adsb_req;             /* in ADS-B mode / asked for it */
 static int s_av_action;                     /* last ADS-B screen key fired */
 static bool s_scan;                         /* in a Wi-Fi / BLE scanner */
@@ -283,6 +284,7 @@ static void do_action(int act)
     case VIEW_UP1M:   retune(f + 1000000); break;
     case VIEW_GAIN:   panel_show(!s_panel); break;
     case VIEW_THEME:  set_look((view_theme() + 1) % view_themes()); break;
+    case VIEW_VOL:    s_vol_popup = true; view_popup_vol(s_ctl.vol); view_blit_spectrum(); break;
     }
     draw_header(act);                       /* keep the key lit while held */
 }
@@ -382,6 +384,21 @@ static void poll_touch(const touch_cal_t *cal)
     if (!down) { down = true; n = 0; return; }       /* landing sample: drop it */
     if (n++ == 0) {                                   /* press */
         x = px; y = py;
+        if (s_vol_popup) {
+            int vb = view_popup_vol_button(x, y);
+            if (vb == 0) {
+                s_ctl.vol = s_ctl.vol > 0 ? s_ctl.vol - 1 : 0;
+                audio_set_volume(s_ctl.vol); show_audio();
+                view_popup_vol(s_ctl.vol); view_blit_spectrum(); settings_changed();
+            } else if (vb == 1) {
+                s_ctl.vol = s_ctl.vol < 10 ? s_ctl.vol + 1 : 10;
+                audio_set_volume(s_ctl.vol); show_audio();
+                view_popup_vol(s_ctl.vol); view_blit_spectrum(); settings_changed();
+            }
+            if (view_popup_tap(x, y)) { s_vol_popup = false; draw_header(-1);
+                if (!s_panel) view_axis(sdr_freq()); }
+            return;
+        }
         if (s_mscan) {                                /* the first touch only stops a scan */
             mscan_stop();
             where = 5;

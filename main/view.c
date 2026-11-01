@@ -268,10 +268,10 @@ float view_floor(void) { return s_floor; }
  * Portrait: readout and MENU on top, the four step keys in a row under them. */
 static void layout(void)
 {
-    static const char *lbl[VIEW_NBTN] = {"-1M", "-100k", "+100k", "+1M", NULL, NULL};
+    static const char *lbl[VIEW_NBTN] = {"-1M", "-100k", "+100k", "+1M", NULL, NULL, "VOL"};
     const int y = T->btn_y, h = T->btn_h;
     if (!LCD_PORTRAIT) {
-        static const int bx[VIEW_NBTN][2] = {{4, 44}, {52, 54}, {318, 54}, {376, 44}, {424, 52}, {110, 204}};
+        static const int bx[VIEW_NBTN][2] = {{4, 44}, {52, 54}, {318, 54}, {376, 44}, {424, 52}, {110, 204}, {624, 44}};
         for (int i = 0; i < VIEW_NBTN; i++) s_btn[i] = (button_t){bx[i][0], y, bx[i][1], h, lbl[i]};
         s_hdr_h = T->hdr_h;
         s_spec_h = T->spec_h;
@@ -281,11 +281,12 @@ static void layout(void)
     }
     const int kw = (LCD_W - 5 * 4) / 4;
     for (int i = 0; i < 4; i++) s_btn[i] = (button_t){4 + i * (kw + 4), T->hdr_h + 3, kw, PORT_KEYS - 6, lbl[i]};
-    s_btn[VIEW_GAIN] = (button_t){LCD_W - 56, y, 52, h, NULL};
-    s_btn[VIEW_THEME] = (button_t){4, y, LCD_W - 64, h, NULL};
+    s_btn[VIEW_GAIN] = (button_t){LCD_W - 116, y, 52, h, NULL};
+    s_btn[VIEW_THEME] = (button_t){LCD_W - 56, y, 52, h, NULL};
+    s_btn[VIEW_VOL] = (button_t){4, y, 52, h, "VOL"};
     s_hdr_h = T->hdr_h + PORT_KEYS;
     s_spec_h = LCD_H * SPECTRUM_PCT / 100;
-    s_ro_x0 = 4;
+    s_ro_x0 = 60;
     s_ro_x1 = LCD_W - 60;
 }
 
@@ -467,7 +468,7 @@ void view_header(uint32_t freq, const char *gain, int pressed)
         rpi_cv_text(&c, LCD_W - 4 - rpi_cv_text_w(r, 1), 0, r, T->dim, 1);
     }
 
-    for (int i = 0; i < VIEW_THEME; i++) {
+    for (int i = 0; i < VIEW_NBTN; i++) {
         const button_t *b = &s_btn[i];
         bool on = i == pressed;
         button(&c, b, on);
@@ -476,6 +477,9 @@ void view_header(uint32_t freq, const char *gain, int pressed)
             rpi_cv_text(&c, b->x + (b->w - rpi_cv_text_w("MENU", 1)) / 2, ty, "MENU", btn_text(on), 1);
             rpi_cv_text(&c, b->x + (b->w - rpi_cv_text_w(gain, 1)) / 2, ty + 15, gain,
                         on || T->hdr == HDR_VINTAGE ? btn_text(on) : T->dim, 1);
+        } else if (i == VIEW_VOL) {
+            int ty = b->y + (b->h - 16) / 2;
+            rpi_cv_text(&c, b->x + (b->w - rpi_cv_text_w(b->label, 1)) / 2, ty, b->label, btn_text(on), 1);
         } else {
             rpi_cv_text(&c, b->x + (b->w - rpi_cv_text_w(b->label, 1)) / 2, b->y + (b->h - 16) / 2,
                         b->label, btn_text(on), 1);
@@ -794,6 +798,63 @@ void view_blit(void)
 {
     view_blit_spectrum();
     view_blit_waterfall();
+}
+
+/* -------------------------------------------------------------------- volume popup -- */
+
+static int s_vol;
+
+void view_popup_vol(int vol)
+{
+    s_vol = vol;
+    const int MARGIN = 16;
+    int bx = MARGIN, by = s_hdr_h + MARGIN, bw = LCD_W - 2 * MARGIN, bh = 120;
+    rpi_canvas_t c = {s_spec, LCD_W, s_spec_h};
+    rpi_cv_fill(&c, 0, 0, LCD_W, s_spec_h, rpi_mix565(T->bg, 0, 128));
+    rpi_cv_rrect(&c, bx, by, bw, bh, 8, T->btn);
+    rpi_cv_rrect(&c, bx + 1, by + 1, bw - 2, bh - 2, 6, T->bg);
+    char lbl[16];
+    snprintf(lbl, sizeof lbl, "%s %d%%", vol > 0 ? "VOL" : "MUTE", vol * 10);
+    int tw = rpi_cv_text_w(lbl, 1);
+    rpi_cv_text(&c, bx + (bw - tw) / 2, by + 8, lbl, T->txt, 1);
+    int sw = bw - 24, sy = by + 36;
+    rpi_cv_rrect(&c, bx + 12, sy, sw, 16, 4, T->plate);
+    int filled = sw * s_vol / 10;
+    if (filled > 0) rpi_cv_rrect(&c, bx + 12, sy, filled, 16, 4, T->freq);
+    const char *l[] = {"-", "+"};
+    for (int i = 0; i < 2; i++) {
+        int kx = i == 0 ? bx + 2 : bx + 12 + sw;
+        rpi_cv_rrect(&c, kx, sy, 20, 16, 3, T->btn_on);
+        rpi_cv_text(&c, kx + 4, sy + 2, l[i], T->bg, 1);
+    }
+}
+
+static bool popup_hit(int x, int y, int bx, int by, int bw, int bh)
+{
+    return x >= bx && x < bx + bw && y >= by && y < by + bh;
+}
+
+bool view_popup_tap(int x, int y)
+{
+    int MARGIN = 16, by = s_hdr_h + MARGIN, bw = LCD_W - 2 * MARGIN, bh = 120;
+    int sy = by + 36;
+    int bx = 16;
+    if (popup_hit(x, y, bx + 12, sy, bw - 24, 16)) return false;   /* slider track: ignore */
+    if (popup_hit(x, y, bx + 2, sy, 20, 16)) return false;         /* minus btn */
+    if (popup_hit(x, y, bx + 12 + bw - 24, sy, 20, 16)) return false; /* plus btn */
+    if (popup_hit(x, y, MARGIN, by, bw, bh)) return false;         /* inside popup */
+    return true;   /* tap outside = dismiss */
+}
+
+static const int s_vol_btn_y = 16;
+static const int s_vol_btn_h = 36;
+
+int view_popup_vol_button(int x, int y)
+{
+    if (y < s_vol_btn_y || y >= s_vol_btn_y + s_vol_btn_h) return -1;
+    if (x >= 16 && x < 64) return 0;   /* VOL_DN */
+    if (x >= 648 && x < 696) return 1; /* VOL_UP */
+    return -1;
 }
 
 /* ------------------------------------------------------------------------ splash -- */
